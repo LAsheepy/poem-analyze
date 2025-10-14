@@ -72,5 +72,5 @@ npm run build
 - 使用Composition API和setup语法糖
 - 遵循TypeScript严格模式
 - 组件采用单文件组件(SFC)格式
-- 实现响应式设计和移动端适配
+- 实现响应式设计和移动端适配哦
 - 编写详细的代码注释和错误处理
