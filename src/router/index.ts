@@ -27,6 +27,22 @@ const routes: Array<RouteRecordRaw> = [
     }
   },
   {
+    path: '/analysis/:id',
+    name: 'DetailedAnalysis',
+    component: () => import('@/views/DetailedAnalysis.vue'),
+    meta: {
+      title: '诗词解析详情'
+    }
+  },
+  {
+    path: '/poems/:id',
+    name: 'PoemDetails',
+    component: () => import('@/views/DetailedAnalysis.vue'),
+    meta: {
+      title: '诗词详情'
+    }
+  },
+  {
     path: '/teacher',
     name: 'Teacher',
     component: () => import('@/views/Teacher.vue'),

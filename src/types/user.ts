@@ -10,6 +10,13 @@ export interface User {
   interests: string[]
   createdAt: Date
   lastLoginAt: Date
+  streakDays?: number
+  analyzedPoems?: number
+  averageScore?: number
+  masteryLevel?: string
+  weeklyActivity?: number
+  weeklyStudyTime?: number
+  completionRate?: number
 }
 
 export interface LearningRecord {
