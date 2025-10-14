@@ -1,6 +1,9 @@
 <template>
   <div class="dashboard">
-    <el-container class="dashboard-container">
+    <div v-if="isLoading" class="loading-container">
+      <el-skeleton :rows="10" animated />
+    </div>
+    <el-container v-else class="dashboard-container">
       <!-- 侧边栏 -->
       <el-aside width="250px" class="sidebar">
         <div class="logo">
@@ -113,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAIStore } from '@/stores/ai'
@@ -136,6 +139,7 @@ const PromotionIcon = Promotion
 
 const activeMenu = ref('dashboard')
 const aiMessage = ref('')
+const isLoading = ref(true)
 
 // 模拟推荐诗词数据
 const recommendedPoems = ref([
@@ -175,12 +179,27 @@ onMounted(() => {
     createdAt: new Date(),
     lastLoginAt: new Date()
   })
+  
+  // 模拟加载延迟
+  setTimeout(() => {
+    isLoading.value = false
+  }, 500)
+})
+
+// 错误捕获
+onErrorCaptured((err) => {
+  console.error('Dashboard组件错误:', err)
+  return false
 })
 </script>
 
 <style lang="scss" scoped>
 .dashboard {
   height: 100vh;
+  
+  .loading-container {
+    padding: 20px;
+  }
   
   .dashboard-container {
     height: 100%;

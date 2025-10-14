@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { AIConversation, AIResponse } from '@/types/ai'
 
 export const useAIStore = defineStore('ai', () => {

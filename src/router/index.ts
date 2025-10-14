@@ -54,7 +54,13 @@ router.beforeEach((to, from, next) => {
     document.title = `${to.meta.title} - 诗韵星`
   }
   
-  next()
+  // 确保路由正常跳转
+  if (to.path === from.path && to.name === from.name) {
+    // 如果是相同路由，强制刷新
+    next({ ...to, replace: true })
+  } else {
+    next()
+  }
 })
 
 export default router
