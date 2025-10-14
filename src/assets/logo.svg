@@ -1,0 +1,6 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="60" cy="60" r="55" fill="#409eff" stroke="#fff" stroke-width="2"/>
+<path d="M45 45L75 75M75 45L45 75" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+<circle cx="60" cy="60" r="20" stroke="#fff" stroke-width="2" fill="none"/>
+<text x="60" y="95" text-anchor="middle" fill="#fff" font-family="Arial" font-size="12" font-weight="bold">诗韵星</text>
+</svg>
