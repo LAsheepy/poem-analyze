@@ -167,23 +167,27 @@ const sendAIMessage = async () => {
   }
 }
 
-onMounted(() => {
-  // 模拟用户登录
-  userStore.setUser({
-    id: '1',
-    username: '测试用户',
-    email: 'test@example.com',
-    role: 'student',
-    learningProgress: 65,
-    interests: ['唐诗', '宋词'],
-    createdAt: new Date(),
-    lastLoginAt: new Date()
-  })
-  
-  // 模拟加载延迟
-  setTimeout(() => {
+onMounted(async () => {
+  try {
+    // 模拟用户登录
+    userStore.setUser({
+      id: '1',
+      username: '测试用户',
+      email: 'test@example.com',
+      role: 'student',
+      learningProgress: 65,
+      interests: ['唐诗', '宋词'],
+      createdAt: new Date(),
+      lastLoginAt: new Date()
+    })
+    
+    // 确保数据加载完成后再显示页面
+    await new Promise(resolve => setTimeout(resolve, 100))
     isLoading.value = false
-  }, 500)
+  } catch (error) {
+    console.error('Dashboard初始化失败:', error)
+    isLoading.value = false
+  }
 })
 
 // 错误捕获
@@ -199,6 +203,10 @@ onErrorCaptured((err) => {
   
   .loading-container {
     padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
   }
   
   .dashboard-container {
