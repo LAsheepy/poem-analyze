@@ -116,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onErrorCaptured } from 'vue'
+import { ref, onMounted, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAIStore } from '@/stores/ai'
