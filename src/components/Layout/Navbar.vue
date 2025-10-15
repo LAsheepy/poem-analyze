@@ -1,0 +1,386 @@
+<template>
+  <div class="navbar">
+    <div class="navbar-container">
+      <!-- Logo区域 -->
+      <div class="navbar-brand">
+        <router-link to="/" class="brand-link">
+          <div class="brand-logo">
+            <el-icon size="24" color="#409eff"><Reading /></el-icon>
+          </div>
+          <span class="brand-text">诗词分析平台</span>
+        </router-link>
+      </div>
+
+      <!-- 导航菜单 -->
+      <div class="navbar-menu">
+        <router-link to="/" class="nav-item" :class="{ active: $route.path === '/' }">
+          <el-icon><House /></el-icon>
+          首页
+        </router-link>
+        <router-link to="/poems" class="nav-item" :class="{ active: $route.path === '/poems' }">
+          <el-icon><Notebook /></el-icon>
+          诗词库
+        </router-link>
+        <router-link to="/chat" class="nav-item" :class="{ active: $route.path === '/chat' }">
+          <el-icon><ChatDotRound /></el-icon>
+          AI助手
+        </router-link>
+      </div>
+
+      <!-- 用户操作区域 -->
+      <div class="navbar-actions">
+        <!-- 搜索框 -->
+        <div class="search-box">
+          <el-input
+            v-model="searchQuery"
+            placeholder="搜索诗词..."
+            size="small"
+            clearable
+            @keyup.enter="handleSearch"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+        </div>
+
+        <!-- 用户信息 -->
+        <div class="user-info" v-if="user">
+          <el-dropdown @command="handleUserCommand">
+            <span class="user-dropdown">
+              <el-avatar :size="32" :src="user.avatar_url" class="user-avatar">
+                {{ user.username?.charAt(0) || 'U' }}
+              </el-avatar>
+              <span class="user-name">{{ user.username }}</span>
+              <el-icon><ArrowDown /></el-icon>
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="profile">
+                  <el-icon><User /></el-icon>
+                  个人中心
+                </el-dropdown-item>
+                <el-dropdown-item command="settings">
+                  <el-icon><Setting /></el-icon>
+                  设置
+                </el-dropdown-item>
+                <el-dropdown-item divided command="logout">
+                  <el-icon><SwitchButton /></el-icon>
+                  退出登录
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+
+        <!-- 登录/注册按钮 -->
+        <div class="auth-buttons" v-else>
+          <el-button type="primary" text @click="goToLogin">
+            登录
+          </el-button>
+          <el-button @click="goToRegister">
+            注册
+          </el-button>
+        </div>
+
+        <!-- 移动端菜单按钮 -->
+        <div class="mobile-menu">
+          <el-dropdown @command="handleMobileCommand">
+            <el-button text>
+              <el-icon><MoreFilled /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="home">
+                  <el-icon><House /></el-icon>
+                  首页
+                </el-dropdown-item>
+                <el-dropdown-item command="poems">
+                  <el-icon><Notebook /></el-icon>
+                  诗词库
+                </el-dropdown-item>
+                <el-dropdown-item command="chat">
+                  <el-icon><ChatDotRound /></el-icon>
+                  AI助手
+                </el-dropdown-item>
+                <el-dropdown-item divided command="profile" v-if="user">
+                  <el-icon><User /></el-icon>
+                  个人中心
+                </el-dropdown-item>
+                <el-dropdown-item command="login" v-if="!user">
+                  <el-icon><User /></el-icon>
+                  登录
+                </el-dropdown-item>
+                <el-dropdown-item command="register" v-if="!user">
+                  <el-icon><EditPen /></el-icon>
+                  注册
+                </el-dropdown-item>
+                <el-dropdown-item command="logout" v-if="user">
+                  <el-icon><SwitchButton /></el-icon>
+                  退出登录
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { 
+  House, Notebook, ChatDotRound, Search, User, Setting, 
+  SwitchButton, ArrowDown, MoreFilled, EditPen, Reading 
+} from '@element-plus/icons-vue'
+import { supabase } from '@/lib/supabase'
+
+const router = useRouter()
+const searchQuery = ref('')
+const user = ref<any>(null)
+
+onMounted(async () => {
+  await checkAuth()
+})
+
+const checkAuth = async () => {
+  try {
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (authUser) {
+      // 获取用户详细信息
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single()
+      
+      user.value = { ...authUser, ...profile }
+    }
+  } catch (error) {
+    console.error('检查认证状态失败:', error)
+  }
+}
+
+const handleSearch = () => {
+  if (searchQuery.value.trim()) {
+    router.push(`/poems?search=${encodeURIComponent(searchQuery.value)}`)
+    searchQuery.value = ''
+  }
+}
+
+const handleUserCommand = (command: string) => {
+  switch (command) {
+    case 'profile':
+      router.push('/profile')
+      break
+    case 'settings':
+      ElMessage.info('设置功能开发中')
+      break
+    case 'logout':
+      handleLogout()
+      break
+  }
+}
+
+const handleMobileCommand = (command: string) => {
+  switch (command) {
+    case 'home':
+      router.push('/')
+      break
+    case 'poems':
+      router.push('/poems')
+      break
+    case 'chat':
+      router.push('/chat')
+      break
+    case 'profile':
+      router.push('/profile')
+      break
+    case 'login':
+      router.push('/login')
+      break
+    case 'register':
+      router.push('/register')
+      break
+    case 'logout':
+      handleLogout()
+      break
+  }
+}
+
+const goToLogin = () => {
+  router.push('/login')
+}
+
+const goToRegister = () => {
+  router.push('/register')
+}
+
+const handleLogout = async () => {
+  try {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+    
+    user.value = null
+    ElMessage.success('退出登录成功')
+    router.push('/')
+  } catch (error: any) {
+    console.error('退出登录失败:', error)
+    ElMessage.error('退出登录失败')
+  }
+}
+</script>
+
+<style scoped>
+.navbar {
+  background: white;
+  border-bottom: 1px solid #e4e7ed;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand-logo {
+  margin-right: 8px;
+}
+
+.brand-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  text-decoration: none;
+  color: #606266;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.nav-item:hover {
+  color: #409eff;
+  background: #f5f7fa;
+}
+
+.nav-item.active {
+  color: #409eff;
+  background: #ecf5ff;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-box {
+  width: 200px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.user-dropdown:hover {
+  background: #f5f7fa;
+}
+
+.user-avatar {
+  margin-right: 8px;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #303133;
+  margin-right: 4px;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.mobile-menu {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .navbar-menu {
+    display: none;
+  }
+  
+  .search-box {
+    display: none;
+  }
+  
+  .mobile-menu {
+    display: block;
+  }
+  
+  .user-name {
+    display: none;
+  }
+  
+  .navbar-container {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-buttons {
+    display: none;
+  }
+  
+  .brand-text {
+    font-size: 16px;
+  }
+}
+</style>

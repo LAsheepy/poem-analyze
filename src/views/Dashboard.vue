@@ -64,36 +64,8 @@
         <el-main class="main-content">
           <!-- 多栏目布局 -->
           <div class="dashboard-grid">
-            <!-- 学习进度卡片 -->
-            <el-card class="progress-card" shadow="hover">
-              <template #header>
-                <div class="card-header">
-                  <span class="card-title">学习进度</span>
-                  <el-button type="text" @click="viewProgressDetails">查看详情</el-button>
-                </div>
-              </template>
-              <div class="progress-content">
-                <el-progress 
-                  :percentage="userStore.user?.learningProgress || 0" 
-                  :stroke-width="12"
-                  class="main-progress"
-                />
-                <div class="progress-stats">
-                  <div class="stat-item">
-                    <span class="stat-label">已解析诗词</span>
-                    <span class="stat-value">{{ userStore.user?.analyzedPoems || 0 }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">平均得分</span>
-                    <span class="stat-value">{{ userStore.user?.averageScore || 0 }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">掌握度</span>
-                    <span class="stat-value">{{ userStore.user?.masteryLevel || '初级' }}</span>
-                  </div>
-                </div>
-              </div>
-            </el-card>
+            <!-- 学习进度图表 -->
+            <ProgressChart />
 
             <!-- AI助手卡片 -->
             <el-card class="ai-card" shadow="hover">
@@ -270,6 +242,7 @@ import { ref, onMounted, onErrorCaptured } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useAIStore } from '@/stores/ai'
+import ProgressChart from '@/components/User/ProgressChart.vue'
 import {
   House,
   Reading,
@@ -366,24 +339,17 @@ const sendAIMessage = async () => {
 
 onMounted(async () => {
   try {
-    // 模拟用户登录
-    userStore.setUser({
-      id: '1',
-      username: '测试用户',
-      email: 'test@example.com',
-      role: 'student',
-      learningProgress: 65,
-      interests: ['唐诗', '宋词'],
-      createdAt: new Date(),
-      lastLoginAt: new Date(),
-      streakDays: 7,
-      analyzedPoems: 12,
-      averageScore: 85,
-      masteryLevel: '中级',
-      weeklyActivity: 40,
-      weeklyStudyTime: 5,
-      completionRate: 75
-    })
+    // 加载用户数据
+    const user = await userStore.loadUser()
+    
+    if (!user) {
+      // 用户未登录，显示登录提示或重定向
+      console.log('用户未登录，显示登录界面')
+      // 这里可以添加登录组件或重定向逻辑
+    } else {
+      // 用户已登录，加载AI对话列表
+      await aiStore.loadConversations()
+    }
     
     // 确保数据加载完成后再显示页面
     await new Promise(resolve => setTimeout(resolve, 100))

@@ -8,8 +8,12 @@ export interface Poem {
   translation?: string
   difficulty: 'easy' | 'medium' | 'hard'
   tags: string[]
+  views?: number
+  likes?: number
   createdAt: Date
   updatedAt: Date
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Annotation {

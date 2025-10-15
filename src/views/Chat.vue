@@ -1,0 +1,426 @@
+<template>
+  <div class="chat-page">
+    <div class="page-header">
+      <h1 class="page-title">AI诗词助手</h1>
+      <p class="page-subtitle">与AI讨论诗词，获得个性化解析</p>
+    </div>
+
+    <div class="chat-container">
+      <!-- 左侧：对话列表 -->
+      <div class="conversation-sidebar">
+        <div class="sidebar-header">
+          <h3>对话历史</h3>
+          <el-button type="primary" size="small" @click="startNewConversation">
+            <el-icon><Plus /></el-icon>
+            新建对话
+          </el-button>
+        </div>
+        
+        <div class="conversation-list">
+          <div
+            v-for="conv in conversations"
+            :key="conv.id"
+            class="conversation-item"
+            :class="{ active: activeConversation?.id === conv.id }"
+            @click="selectConversation(conv)"
+          >
+            <div class="conv-title">{{ conv.title }}</div>
+            <div class="conv-time">{{ formatTime(conv.created_at) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：聊天界面 -->
+      <div class="chat-main">
+        <div class="chat-messages" ref="messagesContainer">
+          <div
+            v-for="message in activeConversation?.messages"
+            :key="message.id"
+            class="message"
+            :class="message.role"
+          >
+            <div class="message-avatar">
+              <el-avatar :size="32">
+                <span v-if="message.role === 'user'">👤</span>
+                <span v-else>🤖</span>
+              </el-avatar>
+            </div>
+            <div class="message-content">
+              <div class="message-text">{{ message.content }}</div>
+              <div class="message-time">{{ formatTime(message.created_at) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <div class="input-container">
+            <el-input
+              v-model="currentMessage"
+              type="textarea"
+              :rows="3"
+              placeholder="输入您的问题或想讨论的诗词..."
+              @keydown.enter.prevent="sendMessage"
+            />
+            <div class="input-actions">
+              <el-button type="primary" @click="sendMessage" :loading="isLoading">
+                <el-icon><Send /></el-icon>
+                发送
+              </el-button>
+              <el-button @click="clearInput">
+                <el-icon><Delete /></el-icon>
+                清空
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, nextTick, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { Plus, Send, Delete } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { generateMockConversations } from '@/utils/mockData'
+import { supabase } from '@/lib/supabase'
+
+const route = useRoute()
+const messagesContainer = ref<HTMLElement>()
+const currentMessage = ref('')
+const isLoading = ref(false)
+
+// 对话数据
+const conversations = ref<any[]>([])
+const activeConversation = ref<any>(null)
+
+const poemId = computed(() => route.query.poem as string)
+
+onMounted(async () => {
+  await loadConversations()
+  if (poemId.value) {
+    startPoemDiscussion(poemId.value)
+  }
+})
+
+const loadConversations = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('加载对话失败:', error)
+      conversations.value = generateMockConversations()
+    } else if (data && data.length > 0) {
+      conversations.value = data
+    } else {
+      conversations.value = generateMockConversations()
+    }
+
+    // 设置默认活跃对话
+    if (conversations.value.length > 0) {
+      activeConversation.value = conversations.value[0]
+    }
+  } catch (error) {
+    console.error('加载对话异常:', error)
+    conversations.value = generateMockConversations()
+    if (conversations.value.length > 0) {
+      activeConversation.value = conversations.value[0]
+    }
+  }
+}
+
+const startNewConversation = () => {
+  const newConv = {
+    id: Date.now().toString(),
+    title: '新对话',
+    created_at: new Date().toISOString(),
+    messages: []
+  }
+  
+  conversations.value.unshift(newConv)
+  activeConversation.value = newConv
+}
+
+const selectConversation = (conv: any) => {
+  activeConversation.value = conv
+}
+
+const startPoemDiscussion = (poemId: string) => {
+  // 这里可以根据诗词ID加载相关诗词信息
+  currentMessage.value = `请帮我分析一下这首诗词`
+}
+
+const sendMessage = async () => {
+  if (!currentMessage.value.trim()) return
+
+  if (!activeConversation.value) {
+    startNewConversation()
+  }
+
+  const userMessage = {
+    id: Date.now().toString(),
+    role: 'user',
+    content: currentMessage.value,
+    created_at: new Date().toISOString()
+  }
+
+  // 添加到当前对话
+  activeConversation.value.messages.push(userMessage)
+  
+  // 更新对话标题（如果是第一条消息）
+  if (activeConversation.value.messages.length === 1) {
+    activeConversation.value.title = currentMessage.value.slice(0, 20) + '...'
+  }
+
+  scrollToBottom()
+  const userInput = currentMessage.value
+  currentMessage.value = ''
+  isLoading.value = true
+
+  try {
+    // 模拟AI回复
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    const aiResponse = await generateAIResponse(userInput)
+    
+    const aiMessage = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: aiResponse,
+      created_at: new Date().toISOString()
+    }
+
+    activeConversation.value.messages.push(aiMessage)
+    scrollToBottom()
+
+    // 保存到数据库
+    await saveConversation(activeConversation.value)
+
+  } catch (error) {
+    console.error('发送消息失败:', error)
+    ElMessage.error('发送失败，请重试')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const generateAIResponse = async (userInput: string): Promise<string> => {
+  // 这里可以集成真实的AI服务
+  const responses = [
+    '这首诗词表达了深切的思乡之情，通过月光意象营造出宁静而忧郁的氛围。',
+    '从文学角度看，这首诗运用了对比手法，将自然景物与内心情感巧妙结合。',
+    '这首诗的意境深远，语言简练，体现了作者高超的艺术造诣。',
+    '从历史背景来看，这首诗反映了当时文人的普遍情感和时代特征。',
+    '这首诗的韵律优美，结构严谨，是古典诗词的典范之作。'
+  ]
+  
+  return responses[Math.floor(Math.random() * responses.length)]
+}
+
+const saveConversation = async (conversation: any) => {
+  try {
+    const { error } = await supabase
+      .from('conversations')
+      .upsert(conversation)
+
+    if (error) {
+      console.error('保存对话失败:', error)
+    }
+  } catch (error) {
+    console.error('保存对话异常:', error)
+  }
+}
+
+const clearInput = () => {
+  currentMessage.value = ''
+}
+
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    }
+  })
+}
+
+const formatTime = (timeString: string) => {
+  return new Date(timeString).toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+</script>
+
+<style scoped>
+.chat-page {
+  height: 100vh;
+  background: #f5f7fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header {
+  background: white;
+  padding: 20px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.page-title {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #909399;
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.conversation-sidebar {
+  width: 300px;
+  background: white;
+  border-right: 1px solid #e4e7ed;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.conversation-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conversation-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.conversation-item:hover {
+  background: #f5f7fa;
+}
+
+.conversation-item.active {
+  background: #ecf5ff;
+  border-left: 3px solid #409eff;
+}
+
+.conv-title {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #303133;
+}
+
+.conv-time {
+  font-size: 12px;
+  color: #909399;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.message {
+  display: flex;
+  margin-bottom: 20px;
+  max-width: 80%;
+}
+
+.message.user {
+  margin-left: auto;
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  margin: 0 12px;
+}
+
+.message-content {
+  max-width: calc(100% - 60px);
+}
+
+.message.user .message-content {
+  text-align: right;
+}
+
+.message-text {
+  background: #f0f2f5;
+  padding: 12px 16px;
+  border-radius: 18px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.message.user .message-text {
+  background: #409eff;
+  color: white;
+}
+
+.message-time {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.chat-input-area {
+  padding: 20px;
+  border-top: 1px solid #e4e7ed;
+  background: white;
+}
+
+.input-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.input-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+  .conversation-sidebar {
+    width: 250px;
+  }
+  
+  .message {
+    max-width: 90%;
+  }
+}
+</style>

@@ -1,3 +1,8 @@
+import { computed } from 'vue'
+import { supabase } from '@/lib/supabase'
+import { useUserStore } from './user'
+import { useAIStore } from './ai'
+
 // 状态管理统一导出
 export { useUserStore } from './user'
 export { useAIStore } from './ai'
@@ -9,26 +14,25 @@ export function useAppStore() {
   
   // 组合式状态
   const isAppReady = computed(() => {
-    return userStore.isAuthenticated && aiStore.conversations.length > 0
+    return userStore.isAuthenticated && !userStore.isLoading
   })
   
   // 组合式方法
   const initializeApp = async () => {
     try {
-      // 初始化用户状态
-      await userStore.setUser({
-        id: '1',
-        username: '测试用户',
-        email: 'test@example.com',
-        role: 'student',
-        learningProgress: 65,
-        interests: ['唐诗', '宋词'],
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      })
+      // 设置认证监听器
+      userStore.setupAuthListener()
       
-      // 初始化AI对话
-      aiStore.createConversation()
+      // 尝试加载当前用户
+      const user = await userStore.loadUser()
+      
+      if (user) {
+        // 用户已登录，加载对话列表
+        await aiStore.loadConversations()
+        console.log('应用初始化成功，用户已登录')
+      } else {
+        console.log('应用初始化成功，用户未登录')
+      }
       
       return true
     } catch (error) {
@@ -43,11 +47,63 @@ export function useAppStore() {
     aiStore.currentConversationId = undefined
   }
   
+  // 登录方法
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+      
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('登录失败:', error)
+      throw error
+    }
+  }
+  
+  // 注册方法
+  const register = async (email: string, password: string, username: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username
+          }
+        }
+      })
+      
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('注册失败:', error)
+      throw error
+    }
+  }
+  
+  // 登出方法
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      resetApp()
+    } catch (error) {
+      console.error('登出失败:', error)
+      throw error
+    }
+  }
+  
   return {
     userStore,
     aiStore,
     isAppReady,
     initializeApp,
-    resetApp
+    resetApp,
+    login,
+    register,
+    logout
   }
 }

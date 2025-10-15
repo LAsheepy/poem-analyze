@@ -4,52 +4,39 @@ import type { RouteRecordRaw } from 'vue-router'
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    name: 'Home',
-    component: () => import('@/views/Home.vue'),
-    meta: {
-      title: '首页'
-    }
-  },
-  {
-    path: '/dashboard',
     name: 'Dashboard',
-    component: () => import('@/views/Dashboard.vue'),
-    meta: {
-      title: '工作台'
-    }
+    component: () => import('@/views/Dashboard.vue')
   },
   {
     path: '/poems',
     name: 'Poems',
-    component: () => import('@/views/Poems.vue'),
-    meta: {
-      title: '诗词解析'
-    }
+    component: () => import('@/views/Poems.vue')
   },
   {
     path: '/analysis/:id',
-    name: 'DetailedAnalysis',
-    component: () => import('@/views/DetailedAnalysis.vue'),
-    meta: {
-      title: '诗词解析详情'
-    }
+    name: 'Analysis',
+    component: () => import('@/views/Analysis.vue'),
+    props: true
   },
   {
-    path: '/poems/:id',
-    name: 'PoemDetails',
-    component: () => import('@/views/DetailedAnalysis.vue'),
-    meta: {
-      title: '诗词详情'
-    }
+    path: '/chat',
+    name: 'Chat',
+    component: () => import('@/views/Chat.vue')
   },
   {
-    path: '/teacher',
-    name: 'Teacher',
-    component: () => import('@/views/Teacher.vue'),
-    meta: {
-      title: '教学管理',
-      requiresTeacher: true
-    }
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@/views/Profile.vue')
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Login.vue')
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/Register.vue')
   },
   {
     path: '/:pathMatch(.*)*',
@@ -59,22 +46,27 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 
-// 路由守卫
-router.beforeEach((to, from, next) => {
-  // 设置页面标题
-  if (to.meta.title) {
-    document.title = `${to.meta.title} - 诗韵星`
-  }
-  
-  // 确保路由正常跳转
-  if (to.path === from.path && to.name === from.name) {
-    // 如果是相同路由，强制刷新
-    next({ ...to, replace: true })
-  } else {
+// 路由守卫 - 检查认证状态
+router.beforeEach(async (to, from, next) => {
+  try {
+    // 获取用户认证状态
+    const { supabase } = await import('@/lib/supabase')
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // 需要认证的路由
+    const authRequired = ['/profile', '/chat'].includes(to.path)
+    
+    if (authRequired && !user) {
+      next('/login')
+    } else {
+      next()
+    }
+  } catch (error) {
+    console.error('路由守卫错误:', error)
     next()
   }
 })
