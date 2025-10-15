@@ -57,11 +57,11 @@
             <el-divider>或使用第三方登录</el-divider>
             <div class="social-buttons">
               <el-button class="social-button github" @click="loginWithGithub">
-                <el-icon><Github /></el-icon>
+                <el-icon><svg viewBox="0 0 1024 1024" width="16" height="16"><path fill="currentColor" d="M511.6 76.3C264.3 76.2 64 276.4 64 523.5 64 718.9 189.3 885 363.8 946c23.5 5.9 19.9-10.8 19.9-22.2v-77.5c-135.7 15.9-141.2-73.9-150.3-88.9C215 726 171.5 718 184.5 703c30.9-15.9 62.4 4 98.9 57.9 26.4 39.1 77.9 32.5 104 26 5.7-23.5 17.9-44.5 34.7-60.8-140.6-25.2-199.2-111-199.2-213 0-49.5 16.3-95 48.3-131.7-20.4-60.5 1.9-112.3 4.9-120 58.1-5.2 118.5 41.6 123.2 45.3 33-8.9 70.7-13.6 112.9-13.6 42.4 0 80.2 4.9 113.5 13.9 11.3-8.6 67.3-48.8 121.3-43.9 2.9 7.7 24.7 58.3 5.5 118 32.4 36.8 48.9 82.7 48.9 132.3 0 102.2-59 188.1-200 212.9 23.5 23.2 38.1 55.4 38.1 91v112.5c0 8.1 0 16.3 1.9 24.1 0 0 0 0 0 0C831.1 885 956.4 718.9 956.4 523.5 956.4 276.4 756.1 76.3 511.6 76.3z"/></svg></el-icon>
                 GitHub
               </el-button>
               <el-button class="social-button google" @click="loginWithGoogle">
-                <el-icon><ChromeFilled /></el-icon>
+                <el-icon><svg viewBox="0 0 1024 1024" width="16" height="16"><path fill="currentColor" d="M881 442.4H519.7v148.5h206.4c-8.9 48-35.9 88.6-76.6 115.8-34.4 23-78.3 36.6-129.9 36.6-99.9 0-184.4-67.5-214.6-158.2-7.6-23-12-47.6-12-72.9s4.4-49.9 12-72.9c30.3-90.6 114.8-158.1 214.7-158.1 56.3 0 106.8 19.4 146.6 57.4l110-110.1C757.6 109.4 649.4 60 522.2 60 294.1 60 109.4 244.7 109.4 472.8c0 228.1 184.7 412.8 412.8 412.8 228.1 0 412.8-184.7 412.8-412.8 0-11.4-.5-22.7-1.5-34z"/></svg></el-icon>
                 Google
               </el-button>
             </div>
@@ -76,7 +76,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Github, ChromeFilled } from '@element-plus/icons-vue'
+// 移除不存在的图标导入
 import { supabase } from '@/lib/supabase'
 
 const router = useRouter()

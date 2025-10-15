@@ -63,7 +63,7 @@
             />
             <div class="input-actions">
               <el-button type="primary" @click="sendMessage" :loading="isLoading">
-                <el-icon><Send /></el-icon>
+                <el-icon><svg viewBox="0 0 1024 1024" width="16" height="16"><path fill="currentColor" d="M931.4 498.9L94.9 79.5c-3.4-1.7-7.3-2.1-11-1.2-3.7 0.9-6.9 3-9 6.1-2.1 3.1-3.1 6.8-2.7 10.5l86.3 352.8-86.3 352.8c-0.4 3.7 0.6 7.4 2.7 10.5 2.1 3.1 5.3 5.2 9 6.1 0.8 0.2 1.6 0.3 2.4 0.3 2.9 0 5.7-0.9 8.1-2.6l836.5-419.4c3.1-1.6 5.2-4.5 5.9-7.8 0.7-3.3-0.1-6.7-2.1-9.3-1.9-2.6-4.9-4.2-8.1-4.2zM170.8 834.3l63.3-258.9 258.9-63.3-258.9-63.3-63.3-258.9 580.5 290.3-580.5 290.3z"/></svg></el-icon>
                 发送
               </el-button>
               <el-button @click="clearInput">
@@ -81,7 +81,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Plus, Send, Delete } from '@element-plus/icons-vue'
+import { Plus, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { generateMockConversations } from '@/utils/mockData'
 import { supabase } from '@/lib/supabase'
