@@ -1,49 +1,60 @@
-export type UserRole = 'student' | 'teacher' | 'admin'
-
+// 用户相关类型定义
 export interface User {
   id: string
   username: string
   email: string
-  role: UserRole
-  avatar?: string
+  role: 'student' | 'teacher'
+  avatarUrl: string | null
   learningProgress: number
-  interests: string[]
-  createdAt: Date
-  lastLoginAt: Date
-  streakDays?: number
-  analyzedPoems?: number
-  averageScore?: number
-  masteryLevel?: string
-  weeklyActivity?: number
-  weeklyStudyTime?: number
-  completionRate?: number
-}
-
-export interface LearningRecord {
-  id: string
-  userId: string
-  username: string
-  poemId: string
-  poemTitle: string
-  score: number
-  interpretation: string
-  submittedAt: Date
-  reviewedAt?: Date
-  feedback?: string
-}
-
-export interface TeacherDashboard {
-  totalStudents: number
-  activeStudents: number
+  streakDays: number
+  analyzedPoems: number
   averageScore: number
-  recentSubmissions: LearningRecord[]
-  riskStudents: RiskStudent[]
+  masteryLevel: string
+  weeklyActivity: number
+  weeklyStudyTime: number
+  completionRate: number
+  interests: string[]
+  createdAt: string
+  updatedAt: string
+  lastLoginAt: string
 }
 
-export interface RiskStudent {
-  userId: string
-  username: string
-  riskLevel: 'low' | 'medium' | 'high'
-  lastActivity: Date
-  issues: string[]
+export interface UserProfile extends Omit<User, 'id' | 'createdAt' | 'updatedAt'> {
+  totalStudyTime: number
+  favoritePoems: string[]
+  achievements: Achievement[]
+}
+
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  icon: string
+  unlockedAt: string
+  progress: number
+  target: number
+}
+
+export interface LearningStats {
+  totalPoems: number
+  totalTime: number
+  averageScore: number
+  completionRate: number
+  streakDays: number
+  weeklyActivity: number
+}
+
+export interface UserPreferences {
+  theme: 'light' | 'dark' | 'auto'
+  language: 'zh' | 'en'
+  notifications: {
+    email: boolean
+    push: boolean
+    studyReminders: boolean
+  }
+  studyGoals: {
+    dailyTime: number
+    weeklyPoems: number
+    targetLevel: string
+  }
 }

@@ -241,26 +241,61 @@ export const generateMockUser = () => {
   }
 }
 
-export const generateMockConversations = () => {
+import type { AIConversation, AIMessage } from '@/types/ai'
+
+export const generateMockConversations = (): AIConversation[] => {
+  const mockMessages1: AIMessage[] = [
+    {
+      id: '1',
+      conversationId: '1',
+      role: 'user',
+      content: '请帮我解析《静夜思》的意境',
+      timestamp: new Date('2024-01-15T10:00:00Z')
+    },
+    {
+      id: '2',
+      conversationId: '1',
+      role: 'assistant',
+      content: '《静夜思》通过月光意象表达了深切的思乡之情...',
+      timestamp: new Date('2024-01-15T10:01:00Z')
+    }
+  ]
+
+  const mockMessages2: AIMessage[] = [
+    {
+      id: '3',
+      conversationId: '2',
+      role: 'user',
+      content: '什么是五言绝句？',
+      timestamp: new Date('2024-01-15T09:00:00Z')
+    },
+    {
+      id: '4',
+      conversationId: '2',
+      role: 'assistant',
+      content: '五言绝句是中国传统诗歌的一种形式，每句五个字，共四句。',
+      timestamp: new Date('2024-01-15T09:01:00Z')
+    }
+  ]
+
   return [
     {
       id: '1',
+      userId: 'mock-user-1',
+      poemId: null,
       title: '唐诗学习讨论',
-      created_at: '2024-01-15T10:00:00Z',
-      messages: [
-        {
-          id: '1',
-          role: 'user',
-          content: '请帮我解析《静夜思》的意境',
-          created_at: '2024-01-15T10:00:00Z'
-        },
-        {
-          id: '2',
-          role: 'assistant',
-          content: '《静夜思》通过月光意象表达了深切的思乡之情...',
-          created_at: '2024-01-15T10:01:00Z'
-        }
-      ]
+      messages: mockMessages1,
+      createdAt: '2024-01-15T10:00:00Z',
+      updatedAt: '2024-01-15T10:01:00Z'
+    },
+    {
+      id: '2',
+      userId: 'mock-user-1',
+      poemId: null,
+      title: '诗词格律探讨',
+      messages: mockMessages2,
+      createdAt: '2024-01-15T09:00:00Z',
+      updatedAt: '2024-01-15T09:01:00Z'
     }
   ]
 }

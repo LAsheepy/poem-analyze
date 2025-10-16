@@ -47,7 +47,7 @@
             </div>
             <div class="message-content">
               <div class="message-text">{{ message.content }}</div>
-              <div class="message-time">{{ formatTime(message.created_at) }}</div>
+              <div class="message-time">{{ formatMessageTime(message.timestamp) }}</div>
             </div>
           </div>
         </div>
@@ -85,6 +85,7 @@ import { Plus, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { generateMockConversations } from '@/utils/mockData'
 import { supabase } from '@/lib/supabase'
+import type { AIConversation, AIMessage } from '@/types/ai'
 
 const route = useRoute()
 const messagesContainer = ref<HTMLElement>()
@@ -92,8 +93,8 @@ const currentMessage = ref('')
 const isLoading = ref(false)
 
 // 对话数据
-const conversations = ref<any[]>([])
-const activeConversation = ref<any>(null)
+const conversations = ref<AIConversation[]>([])
+const activeConversation = ref<AIConversation | null>(null)
 
 const poemId = computed(() => route.query.poem as string)
 
@@ -107,7 +108,7 @@ onMounted(async () => {
 const loadConversations = async () => {
   try {
     const { data, error } = await supabase
-      .from('conversations')
+      .from('ai_conversations')
       .select('*')
       .order('created_at', { ascending: false })
 
@@ -115,7 +116,16 @@ const loadConversations = async () => {
       console.error('加载对话失败:', error)
       conversations.value = generateMockConversations()
     } else if (data && data.length > 0) {
-      conversations.value = data
+      // 转换数据库字段名到TypeScript类型
+      conversations.value = data.map(conv => ({
+        id: conv.id,
+        userId: conv.user_id,
+        poemId: conv.poem_id,
+        title: conv.title,
+        messages: conv.messages || [],
+        createdAt: conv.created_at,
+        updatedAt: conv.updated_at
+      }))
     } else {
       conversations.value = generateMockConversations()
     }
@@ -134,18 +144,21 @@ const loadConversations = async () => {
 }
 
 const startNewConversation = () => {
-  const newConv = {
+  const newConv: AIConversation = {
     id: Date.now().toString(),
+    userId: '', // 将在保存时设置
+    poemId: null,
     title: '新对话',
-    created_at: new Date().toISOString(),
-    messages: []
+    messages: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
   
   conversations.value.unshift(newConv)
   activeConversation.value = newConv
 }
 
-const selectConversation = (conv: any) => {
+const selectConversation = (conv: AIConversation) => {
   activeConversation.value = conv
 }
 
@@ -161,11 +174,12 @@ const sendMessage = async () => {
     startNewConversation()
   }
 
-  const userMessage = {
+  const userMessage: AIMessage = {
     id: Date.now().toString(),
+    conversationId: activeConversation.value.id,
     role: 'user',
     content: currentMessage.value,
-    created_at: new Date().toISOString()
+    timestamp: new Date()
   }
 
   // 添加到当前对话
@@ -187,11 +201,12 @@ const sendMessage = async () => {
     
     const aiResponse = await generateAIResponse(userInput)
     
-    const aiMessage = {
+    const aiMessage: AIMessage = {
       id: (Date.now() + 1).toString(),
+      conversationId: activeConversation.value.id,
       role: 'assistant',
       content: aiResponse,
-      created_at: new Date().toISOString()
+      timestamp: new Date()
     }
 
     activeConversation.value.messages.push(aiMessage)
@@ -221,11 +236,28 @@ const generateAIResponse = async (userInput: string): Promise<string> => {
   return responses[Math.floor(Math.random() * responses.length)]
 }
 
-const saveConversation = async (conversation: any) => {
+const saveConversation = async (conversation: AIConversation) => {
   try {
+    // 转换TypeScript类型到数据库字段名
+    const dbConversation = {
+      id: conversation.id,
+      user_id: conversation.userId,
+      poem_id: conversation.poemId,
+      title: conversation.title,
+      messages: conversation.messages.map(msg => ({
+        id: msg.id,
+        conversation_id: msg.conversationId,
+        role: msg.role,
+        content: msg.content,
+        created_at: msg.timestamp.toISOString()
+      })),
+      created_at: conversation.createdAt,
+      updated_at: conversation.updatedAt
+    }
+
     const { error } = await supabase
-      .from('conversations')
-      .upsert(conversation)
+      .from('ai_conversations')
+      .upsert(dbConversation)
 
     if (error) {
       console.error('保存对话失败:', error)
@@ -249,6 +281,14 @@ const scrollToBottom = () => {
 
 const formatTime = (timeString: string) => {
   return new Date(timeString).toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+// 在模板中显示时间时使用
+const formatMessageTime = (timestamp: Date) => {
+  return timestamp.toLocaleTimeString('zh-CN', {
     hour: '2-digit',
     minute: '2-digit'
   })
