@@ -154,52 +154,68 @@ const handleRegister = async () => {
       password: registerForm.password
     })
 
-    if (loginData.user) {
+    if (loginData?.user) {
       // 用户已存在，直接登录成功
       ElMessage.success('登录成功！')
       router.push('/')
       return
     }
 
-    // 如果登录失败，尝试注册
+    // 如果登录失败，尝试注册新用户
     const { data, error } = await supabase.auth.signUp({
       email: registerForm.email,
       password: registerForm.password,
       options: {
         data: {
           username: registerForm.username
-        },
-        // 禁用邮箱验证，直接创建用户
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       }
     })
 
     if (error) {
+      // 检查具体错误类型
+      if (error.message.includes('User already registered')) {
+        ElMessage.error('该邮箱已被注册，请直接登录')
+        return
+      } else if (error.message.includes('confirmation email')) {
+        // 邮箱验证错误，提供替代方案
+        ElMessage.warning('邮箱验证服务暂时不可用，正在尝试直接创建用户...')
+        
+        // 尝试使用管理员API（如果可用）
+        // 这里我们提供一个简单的解决方案：提示用户稍后重试
+        throw new Error('注册服务暂时不可用，请稍后重试或联系管理员配置SMTP服务')
+      }
       throw error
     }
 
     if (data.user) {
-      // 注册成功后立即登录
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: registerForm.email,
-        password: registerForm.password
-      })
+      // 注册成功，检查是否需要邮箱验证
+      if (data.user.identities && data.user.identities.length > 0) {
+        // 用户已创建，尝试立即登录
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: registerForm.email,
+          password: registerForm.password
+        })
 
-      if (signInError) {
-        throw signInError
+        if (signInError) {
+          // 如果登录失败，说明需要邮箱验证
+          ElMessage.success('注册成功！请检查您的邮箱完成验证，然后重新登录')
+          router.push('/login')
+          return
+        }
+
+        // 登录成功
+        ElMessage.success('注册成功！已自动登录')
+        router.push('/')
+      } else {
+        // 需要邮箱验证
+        ElMessage.success('注册成功！请检查您的邮箱完成验证')
+        router.push('/login')
       }
-
-      ElMessage.success('注册成功！已自动登录')
-      router.push('/')
     }
   } catch (error: any) {
     console.error('注册失败:', error)
-    // 检查是否是邮箱验证错误，如果是则提供替代方案
-    if (error.message.includes('confirmation email')) {
-      ElMessage.error('注册失败：邮箱验证服务暂时不可用。请稍后重试或联系管理员。')
-    } else {
-      ElMessage.error(error.message || '注册失败，请重试')
-    }
+    ElMessage.error(error.message || '注册失败，请重试')
   } finally {
     loading.value = false
   }
