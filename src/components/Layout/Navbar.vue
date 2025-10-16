@@ -129,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
@@ -144,6 +144,13 @@ const user = ref<any>(null)
 
 onMounted(async () => {
   await checkAuth()
+  setupAuthListener()
+})
+
+onUnmounted(() => {
+  // 清理监听器
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {})
+  subscription?.unsubscribe()
 })
 
 const checkAuth = async () => {
@@ -158,10 +165,24 @@ const checkAuth = async () => {
         .single()
       
       user.value = { ...authUser, ...profile }
+    } else {
+      user.value = null
     }
   } catch (error) {
     console.error('检查认证状态失败:', error)
+    user.value = null
   }
+}
+
+const setupAuthListener = () => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    console.log('认证状态变化:', event)
+    if (event === 'SIGNED_IN' && session?.user) {
+      await checkAuth()
+    } else if (event === 'SIGNED_OUT') {
+      user.value = null
+    }
+  })
 }
 
 const handleSearch = () => {

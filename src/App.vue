@@ -36,10 +36,13 @@ const handleAuthSuccess = () => {
 }
 
 // 监听路由变化，在需要认证的页面检查登录状态
-onMounted(() => {
+onMounted(async () => {
+  // 初始化应用
+  await appStore.initializeApp()
+  
   // 可以根据当前路由决定是否显示登录模态框
   const currentRoute = router.currentRoute.value
-  const requiresAuth = currentRoute.meta?.requiresAuth
+  const requiresAuth = ['/profile', '/chat'].includes(currentRoute.path)
   
   if (requiresAuth && !appStore.userStore.isAuthenticated) {
     showAuthModal.value = true

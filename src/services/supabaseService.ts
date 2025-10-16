@@ -8,7 +8,7 @@ export const userService = {
     if (!user) return null
     
     const { data, error } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single()
@@ -23,7 +23,7 @@ export const userService = {
     if (!user) throw new Error('用户未登录')
     
     const { data, error } = await supabase
-      .from('users')
+      .from('profiles')
       .upsert({
         id: user.id,
         ...userData,
@@ -42,7 +42,7 @@ export const userService = {
     if (!user) throw new Error('用户未登录')
     
     const { data, error } = await supabase
-      .from('users')
+      .from('profiles')
       .update({ 
         learning_progress: progress,
         updated_at: new Date().toISOString()
