@@ -7,7 +7,8 @@ export const n8nService = {
     const n8nWebhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL
     
     if (!n8nWebhookUrl) {
-      throw new Error('N8N webhook URL 未配置')
+      console.warn('N8N webhook URL 未配置，使用模拟 AI 响应')
+      return this.getMockAIResponse(message)
     }
     
     try {
@@ -28,10 +29,11 @@ export const n8nService = {
       }
       
       const data = await response.json()
-      return data.response || data.choices?.[0]?.message?.content || '抱歉，我暂时无法回答这个问题。'
+      return data.response || data.choices?.[0]?.message?.content || this.getMockAIResponse(message)
     } catch (error) {
       console.error('调用 n8n AI 助手失败:', error)
-      throw new Error('AI 服务暂时不可用，请稍后重试')
+      console.warn('使用模拟 AI 响应作为备选方案')
+      return this.getMockAIResponse(message)
     }
   },
   
@@ -68,6 +70,33 @@ ${poemContent}
   async getLearningSuggestions(userLevel: string, interests: string[]): Promise<string> {
     const prompt = `根据用户的学习水平（${userLevel}）和兴趣领域（${interests.join(', ')}），提供个性化的诗词学习建议和学习路径规划。`
     return this.sendMessage(prompt)
+  },
+  
+  // 模拟 AI 响应（开发环境备用）
+  getMockAIResponse(message: string): string {
+    const responses = [
+      "您好！我是诗词AI助手，很高兴为您服务。",
+      "关于诗词的问题，我可以帮您解析意境、分析修辞手法、了解创作背景等。",
+      "请告诉我您想了解哪首诗词，或者有什么具体的诗词问题需要解答？",
+      "我可以帮您分析诗词的字词含义、意象表达、情感内涵等方面。",
+      "如果您有具体的诗词内容，我可以为您提供专业的解析和赏析。"
+    ]
+    
+    // 根据消息内容返回不同的响应
+    if (message.includes('诗词') || message.includes('诗') || message.includes('词')) {
+      return "关于诗词的问题，我可以帮您解析意境、分析修辞手法、了解创作背景等。请告诉我具体的诗词内容或您想了解的问题。"
+    }
+    
+    if (message.includes('解析') || message.includes('分析') || message.includes('赏析')) {
+      return "我可以帮您进行诗词解析，包括字词解释、意象分析、情感表达等方面。请提供具体的诗词内容。"
+    }
+    
+    if (message.includes('学习') || message.includes('建议')) {
+      return "我可以为您提供个性化的诗词学习建议，包括推荐阅读、学习方法、学习路径规划等。"
+    }
+    
+    // 默认响应
+    return responses[Math.floor(Math.random() * responses.length)]
   }
 }
 

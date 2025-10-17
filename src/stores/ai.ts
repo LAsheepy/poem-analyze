@@ -42,27 +42,15 @@ export const useAIStore = defineStore('ai', () => {
     error.value = null
     
     try {
-      // 保存用户消息到数据库
-      await aiService.sendMessage(currentConversationId.value!, message, 'user')
-      
-      // 模拟AI响应（后续可集成真实AI服务）
-      const aiResponse = `这是AI对"${message}"的响应。基于诗词解析功能，我可以为您提供：
-
-1. 字词解析和注释
-2. 意象分析和意境解读
-3. 作者生平和创作背景
-4. 艺术特色和情感表达
-
-请告诉我您想了解的具体内容。`
-      
-      // 保存AI响应到数据库
-      await aiService.sendMessage(currentConversationId.value!, aiResponse, 'assistant')
+      // 使用 aiService.sendMessage 方法，它会自动调用 n8n AI 服务
+      // 这个方法会保存用户消息，调用 AI 服务，保存 AI 响应，并返回 AI 消息
+      const aiMessage = await aiService.sendMessage(currentConversationId.value!, message)
       
       // 更新本地对话状态
       const response: AIResponse = {
-        id: Date.now().toString(),
-        content: aiResponse,
-        timestamp: new Date(),
+        id: aiMessage.id,
+        content: aiMessage.content,
+        timestamp: new Date(aiMessage.created_at),
         poemId: poemId || null
       }
       
