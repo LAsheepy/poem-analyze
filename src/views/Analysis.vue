@@ -25,7 +25,8 @@
       </div>
     </div>
 
-    <div class="page-content">
+    <!-- 主要内容区 -->
+    <div class="main-content">
       <div class="analysis-layout">
         <!-- 左侧：诗词内容 -->
         <div class="poem-section">
@@ -268,7 +269,7 @@ const recordView = async () => {
   gap: 12px;
 }
 
-.page-content {
+.main-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px 20px;

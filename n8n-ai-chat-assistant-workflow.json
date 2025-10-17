@@ -1,0 +1,171 @@
+{
+  "name": "AI聊天助手工作流",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 处理输入消息\nconst inputData = $input.first().json;\nconst userMessage = inputData.message || inputData.text || '';\nconst conversationId = inputData.conversationId || '';\n\n// 返回处理后的数据\nreturn [{\n  json: {\n    userMessage: userMessage,\n    conversationId: conversationId,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "2",
+      "name": "处理用户输入",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "requestMethod": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-3.5-turbo"
+            },
+            {
+              "name": "messages",
+              "value": "=[\n  {\n    \"role\": \"system\",\n    \"content\": \"你是一个有用的AI助手，请用中文回答用户的问题。\"\n  },\n  {\n    \"role\": \"user\",\n    \"content\": \"{{ $json.userMessage }}\"\n  }\n]"
+            },
+            {
+              "name": "max_tokens",
+              "value": "1000"
+            },
+            {
+              "name": "temperature",
+              "value": "0.7"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "OpenAI API调用",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 处理OpenAI响应\nconst responseData = $input.first().json;\nconst aiResponse = responseData.choices[0].message.content;\n\n// 返回响应数据\nreturn [{\n  json: {\n    response: aiResponse,\n    conversationId: $json.conversationId,\n    userMessage: $json.userMessage,\n    timestamp: $json.timestamp\n  }\n}];"
+      },
+      "id": "4",
+      "name": "处理AI响应",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "5",
+      "name": "响应Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": "={{ $json.conversationId || \"default\" }}",
+        "properties": {
+          "userMessage": "={{ $json.userMessage }}",
+          "aiResponse": "={{ $json.response }}",
+          "timestamp": "={{ $json.timestamp }}"
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "记录对话（可选）",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 2,
+      "position": [900, 480]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "处理用户输入",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理用户输入": {
+      "main": [
+        [
+          {
+            "node": "OpenAI API调用",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI API调用": {
+      "main": [
+        [
+          {
+            "node": "处理AI响应",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理AI响应": {
+      "main": [
+        [
+          {
+            "node": "响应Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "记录对话（可选）",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

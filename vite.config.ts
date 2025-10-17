@@ -2,6 +2,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 import { createHtmlPlugin } from 'vite-plugin-html'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -14,6 +16,9 @@ export default defineConfig({
           title: '诗韵星 - AI诗词解析平台'
         }
       }
+    }),
+    Components({
+      resolvers: [ElementPlusResolver()],
     })
   ],
   resolve: {
@@ -27,11 +32,16 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      input: {
-        main: './index.html'
+      output: {
+        manualChunks: {
+          'element-plus': ['element-plus'],
+          'vendor': ['vue', 'vue-router', 'pinia'],
+          'supabase': ['@supabase/supabase-js']
+        }
       }
     },
-    outDir: 'dist'
+    outDir: 'dist',
+    chunkSizeWarningLimit: 1000
   },
   css: {
     preprocessorOptions: {

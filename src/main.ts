@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
+import { ElLoading } from 'element-plus'
+import 'element-plus/theme-chalk/base.css'
 import './styles/main.scss'
 
 import App from './App.vue'
@@ -12,7 +12,7 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
-app.use(ElementPlus)
+app.use(ElLoading)
 
 // 简化初始化，避免可能的错误
 app.mount('#app')

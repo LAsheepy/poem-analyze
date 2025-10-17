@@ -11,118 +11,76 @@
         </router-link>
       </div>
 
-      <!-- 导航菜单 -->
-      <div class="navbar-menu">
-        <router-link to="/" class="nav-item" :class="{ active: $route.path === '/' }">
-          <el-icon><House /></el-icon>
-          首页
-        </router-link>
-        <router-link to="/poems" class="nav-item" :class="{ active: $route.path === '/poems' }">
-          <el-icon><Notebook /></el-icon>
-          诗词库
-        </router-link>
-        <router-link to="/chat" class="nav-item" :class="{ active: $route.path === '/chat' }">
-          <el-icon><ChatDotRound /></el-icon>
-          AI助手
-        </router-link>
+      <!-- 桌面端用户菜单 -->
+      <div class="desktop-user-menu" v-if="user">
+        <el-dropdown @command="handleUserCommand">
+          <span class="user-dropdown">
+            <el-avatar :size="32" :src="user.avatar_url" class="user-avatar">
+              {{ user.username?.charAt(0) || 'U' }}
+            </el-avatar>
+            <span class="user-name">{{ user.username || '用户' }}</span>
+            <el-icon><ArrowDown /></el-icon>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="profile">
+                <el-icon><User /></el-icon>
+                个人中心
+              </el-dropdown-item>
+              <el-dropdown-item divided command="logout">
+                <el-icon><SwitchButton /></el-icon>
+                退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
 
-      <!-- 用户操作区域 -->
-      <div class="navbar-actions">
-        <!-- 搜索框 -->
-        <div class="search-box">
-          <el-input
-            v-model="searchQuery"
-            placeholder="搜索诗词..."
-            size="small"
-            clearable
-            @keyup.enter="handleSearch"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-        </div>
+      <!-- 桌面端登录/注册按钮 -->
+      <div class="auth-buttons" v-else>
+        <el-button type="primary" text @click="goToLogin">登录</el-button>
+        <el-button type="primary" @click="goToRegister">注册</el-button>
+      </div>
 
-        <!-- 用户信息 -->
-        <div class="user-info" v-if="user">
-          <el-dropdown @command="handleUserCommand">
-            <span class="user-dropdown">
-              <el-avatar :size="32" :src="user.avatar_url" class="user-avatar">
-                {{ user.username?.charAt(0) || 'U' }}
-              </el-avatar>
-              <span class="user-name">{{ user.username }}</span>
-              <el-icon><ArrowDown /></el-icon>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="profile">
-                  <el-icon><User /></el-icon>
-                  个人中心
-                </el-dropdown-item>
-                <el-dropdown-item command="settings">
-                  <el-icon><Setting /></el-icon>
-                  设置
-                </el-dropdown-item>
-                <el-dropdown-item divided command="logout">
-                  <el-icon><SwitchButton /></el-icon>
-                  退出登录
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
-
-        <!-- 登录/注册按钮 -->
-        <div class="auth-buttons" v-else>
-          <el-button type="primary" text @click="goToLogin">
-            登录
+      <!-- 移动端菜单按钮 -->
+      <div class="mobile-menu">
+        <el-dropdown @command="handleMobileCommand">
+          <el-button text>
+            <el-icon><MoreFilled /></el-icon>
           </el-button>
-          <el-button @click="goToRegister">
-            注册
-          </el-button>
-        </div>
-
-        <!-- 移动端菜单按钮 -->
-        <div class="mobile-menu">
-          <el-dropdown @command="handleMobileCommand">
-            <el-button text>
-              <el-icon><MoreFilled /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="home">
-                  <el-icon><House /></el-icon>
-                  首页
-                </el-dropdown-item>
-                <el-dropdown-item command="poems">
-                  <el-icon><Notebook /></el-icon>
-                  诗词库
-                </el-dropdown-item>
-                <el-dropdown-item command="chat">
-                  <el-icon><ChatDotRound /></el-icon>
-                  AI助手
-                </el-dropdown-item>
-                <el-dropdown-item divided command="profile" v-if="user">
-                  <el-icon><User /></el-icon>
-                  个人中心
-                </el-dropdown-item>
-                <el-dropdown-item command="login" v-if="!user">
-                  <el-icon><User /></el-icon>
-                  登录
-                </el-dropdown-item>
-                <el-dropdown-item command="register" v-if="!user">
-                  <el-icon><EditPen /></el-icon>
-                  注册
-                </el-dropdown-item>
-                <el-dropdown-item command="logout" v-if="user">
-                  <el-icon><SwitchButton /></el-icon>
-                  退出登录
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-        </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="home">
+                <el-icon><House /></el-icon>
+                首页
+              </el-dropdown-item>
+              <el-dropdown-item command="poems">
+                <el-icon><Notebook /></el-icon>
+                诗词库
+              </el-dropdown-item>
+              <el-dropdown-item command="chat">
+                <el-icon><ChatDotRound /></el-icon>
+                AI助手
+              </el-dropdown-item>
+              <el-dropdown-item command="profile" v-if="user">
+                <el-icon><User /></el-icon>
+                个人中心
+              </el-dropdown-item>
+              <el-dropdown-item divided command="login" v-if="!user">
+                <el-icon><User /></el-icon>
+                登录
+              </el-dropdown-item>
+              <el-dropdown-item command="register" v-if="!user">
+                <el-icon><EditPen /></el-icon>
+                注册
+              </el-dropdown-item>
+              <el-dropdown-item command="logout" v-if="user">
+                <el-icon><SwitchButton /></el-icon>
+                退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
     </div>
   </div>
@@ -198,7 +156,7 @@ const handleUserCommand = (command: string) => {
       router.push('/profile')
       break
     case 'settings':
-      ElMessage.info('设置功能开发中')
+      router.push('/settings')
       break
     case 'logout':
       handleLogout()
@@ -219,6 +177,9 @@ const handleMobileCommand = (command: string) => {
       break
     case 'profile':
       router.push('/profile')
+      break
+    case 'settings':
+      router.push('/settings')
       break
     case 'login':
       router.push('/login')
@@ -297,42 +258,26 @@ const handleLogout = async () => {
   color: #303133;
 }
 
-.navbar-menu {
+.navbar-center {
   display: flex;
   align-items: center;
-  gap: 32px;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  text-decoration: none;
-  color: #606266;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  font-size: 14px;
-}
-
-.nav-item:hover {
-  color: #409eff;
-  background: #f5f7fa;
-}
-
-.nav-item.active {
-  color: #409eff;
-  background: #ecf5ff;
-}
-
-.navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  justify-content: center;
+  flex: 1;
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 .search-box {
-  width: 200px;
+  width: 300px;
+}
+
+.search-box :deep(.el-input__wrapper) {
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-box :deep(.el-input__inner) {
+  font-size: 14px;
 }
 
 .user-info {
@@ -374,20 +319,12 @@ const handleLogout = async () => {
 }
 
 @media (max-width: 768px) {
-  .navbar-menu {
-    display: none;
-  }
-  
-  .search-box {
+  .navbar-center {
     display: none;
   }
   
   .mobile-menu {
     display: block;
-  }
-  
-  .user-name {
-    display: none;
   }
   
   .navbar-container {
@@ -396,10 +333,6 @@ const handleLogout = async () => {
 }
 
 @media (max-width: 480px) {
-  .auth-buttons {
-    display: none;
-  }
-  
   .brand-text {
     font-size: 16px;
   }

@@ -1,20 +1,25 @@
 <template>
   <div class="chat-page">
+    <!-- 简洁顶部栏 -->
     <div class="page-header">
-      <h1 class="page-title">AI诗词助手</h1>
-      <p class="page-subtitle">与AI讨论诗词，获得个性化解析</p>
+      <div class="header-content">
+        <h1 class="page-title">AI诗词助手</h1>
+        <p class="page-subtitle">与AI讨论诗词，获得个性化解析</p>
+      </div>
     </div>
 
-    <div class="chat-container">
-      <!-- 左侧：对话列表 -->
-      <div class="conversation-sidebar">
-        <div class="sidebar-header">
-          <h3>对话历史</h3>
-          <el-button type="primary" size="small" @click="startNewConversation">
-            <el-icon><Plus /></el-icon>
-            新建对话
-          </el-button>
-        </div>
+    <!-- 主要内容区 -->
+    <div class="main-content">
+      <div class="chat-container">
+        <!-- 左侧：对话列表 -->
+        <div class="conversation-sidebar">
+          <div class="sidebar-header">
+            <h3>对话历史</h3>
+            <el-button type="primary" size="small" @click="startNewConversation">
+              <el-icon><Plus /></el-icon>
+              新建对话
+            </el-button>
+          </div>
         
         <div class="conversation-list">
           <div
@@ -25,10 +30,11 @@
             @click="selectConversation(conv)"
           >
             <div class="conv-title">{{ conv.title }}</div>
-            <div class="conv-time">{{ formatTime(conv.created_at) }}</div>
+            <div class="conv-time">{{ formatTime(conv.createdAt) }}</div>
           </div>
         </div>
       </div>
+    </div>
 
       <!-- 右侧：聊天界面 -->
       <div class="chat-main">
@@ -297,7 +303,7 @@ const formatMessageTime = (timestamp: Date) => {
 
 <style scoped>
 .chat-page {
-  height: 100vh;
+  min-height: 100vh;
   background: #f5f7fa;
   display: flex;
   flex-direction: column;
@@ -305,8 +311,44 @@ const formatMessageTime = (timestamp: Date) => {
 
 .page-header {
   background: white;
-  padding: 20px;
   border-bottom: 1px solid #e4e7ed;
+  padding: 24px 0;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.page-title {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #303133;
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #909399;
+}
+
+.main-content {
+  flex: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chat-container {
+  height: calc(100vh - 200px);
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-title {
@@ -320,12 +362,6 @@ const formatMessageTime = (timestamp: Date) => {
   margin: 0;
   font-size: 14px;
   color: #909399;
-}
-
-.chat-container {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
 }
 
 .conversation-sidebar {
@@ -386,12 +422,14 @@ const formatMessageTime = (timestamp: Date) => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  max-height: calc(100% - 120px);
 }
 
 .message {
@@ -440,6 +478,7 @@ const formatMessageTime = (timestamp: Date) => {
   padding: 20px;
   border-top: 1px solid #e4e7ed;
   background: white;
+  flex-shrink: 0;
 }
 
 .input-container {

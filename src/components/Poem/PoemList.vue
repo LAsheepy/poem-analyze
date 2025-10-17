@@ -2,7 +2,7 @@
   <div class="poem-list">
     <div class="list-header">
       <h2 class="list-title">{{ title }}</h2>
-      <div class="list-actions">
+      <div v-if="showSearch" class="list-actions">
         <el-input
           v-model="searchQuery"
           placeholder="搜索诗词..."
@@ -118,11 +118,13 @@ interface Props {
   poems: any[]
   title?: string
   showActions?: boolean
+  showSearch?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   title: '诗词列表',
-  showActions: true
+  showActions: true,
+  showSearch: true
 })
 
 const router = useRouter()
@@ -138,25 +140,28 @@ const pageSize = ref(12)
 const filteredPoems = computed(() => {
   let filtered = props.poems
 
-  // 搜索过滤
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(poem => 
-      poem.title.toLowerCase().includes(query) ||
-      poem.author.toLowerCase().includes(query) ||
-      poem.content.some((line: string) => line.toLowerCase().includes(query)) ||
-      poem.tags.some((tag: string) => tag.toLowerCase().includes(query))
-    )
-  }
+  // 只有当显示内部搜索时才进行过滤
+  if (props.showSearch) {
+    // 搜索过滤
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      filtered = filtered.filter(poem => 
+        poem.title.toLowerCase().includes(query) ||
+        poem.author.toLowerCase().includes(query) ||
+        poem.content.some((line: string) => line.toLowerCase().includes(query)) ||
+        poem.tags.some((tag: string) => tag.toLowerCase().includes(query))
+      )
+    }
 
-  // 朝代过滤
-  if (filterDynasty.value) {
-    filtered = filtered.filter(poem => poem.dynasty === filterDynasty.value)
-  }
+    // 朝代过滤
+    if (filterDynasty.value) {
+      filtered = filtered.filter(poem => poem.dynasty === filterDynasty.value)
+    }
 
-  // 难度过滤
-  if (filterDifficulty.value) {
-    filtered = filtered.filter(poem => poem.difficulty === filterDifficulty.value)
+    // 难度过滤
+    if (filterDifficulty.value) {
+      filtered = filtered.filter(poem => poem.difficulty === filterDifficulty.value)
+    }
   }
 
   return filtered
