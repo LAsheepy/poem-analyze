@@ -7,6 +7,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [
     vue(),
     createHtmlPlugin({
@@ -41,7 +42,8 @@ export default defineConfig({
       }
     },
     outDir: 'dist',
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    assetsDir: 'assets'
   },
   css: {
     preprocessorOptions: {
