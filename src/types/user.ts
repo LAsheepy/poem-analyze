@@ -1,5 +1,6 @@
 // 用户相关类型定义
 export interface User {
+  bio: string
   id: string
   username: string
   email: string
