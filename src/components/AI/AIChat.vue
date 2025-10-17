@@ -11,7 +11,7 @@
           </div>
           <div class="content">
             <div class="text" v-html="formatMessage(message.content)"></div>
-            <div class="time">{{ formatTime(message.created_at) }}</div>
+            <div class="time">{{ formatTime(message.timestamp) }}</div>
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@ const isLoading = ref(false)
 
 // 计算属性
 const messages = computed(() => aiStore.currentConversation?.messages || [])
-const userAvatar = computed(() => userStore.user?.avatar_url || '')
+const userAvatar = computed(() => userStore.user?.avatarUrl || '')
 const aiAvatar = computed(() => '/ai-avatar.png')
 
 // 方法
@@ -82,8 +82,8 @@ const formatMessage = (content: string) => {
     .replace(/\n/g, '<br>')
 }
 
-const formatTime = (timestamp: string) => {
-  return new Date(timestamp).toLocaleTimeString('zh-CN', {
+const formatTime = (timestamp: Date) => {
+  return timestamp.toLocaleTimeString('zh-CN', {
     hour: '2-digit',
     minute: '2-digit'
   })
