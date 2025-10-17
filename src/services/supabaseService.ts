@@ -1,4 +1,5 @@
 import { supabase, type User, type Poem, type PoemAnalysis, type LearningRecord, type AIConversation, type AIMessage } from '@/lib/supabase'
+import { n8nService } from './n8nService'
 
 // 用户服务
 export const userService = {
@@ -239,17 +240,63 @@ export const aiService = {
   
   // 发送消息
   async sendMessage(conversationId: string, content: string, role: 'user' | 'assistant' = 'user'): Promise<AIMessage> {
-    const { data, error } = await supabase
+    // 保存用户消息到数据库
+    const { data: userMessage, error: userError } = await supabase
       .from('ai_messages')
       .insert({
         conversation_id: conversationId,
-        role,
+        role: 'user',
         content
       })
       .select()
       .single()
     
-    if (error) throw error
+    if (userError) throw userError
+    
+    // 如果是用户消息，调用 AI 助手获取响应
+    if (role === 'user') {
+      try {
+        // 调用 n8n AI 助手获取响应
+        const aiResponse = await n8nService.sendMessage(content, conversationId)
+        
+        // 保存 AI 响应到数据库
+        const { data: aiMessage, error: aiError } = await supabase
+          .from('ai_messages')
+          .insert({
+            conversation_id: conversationId,
+            role: 'assistant',
+            content: aiResponse
+          })
+          .select()
+          .single()
+        
+        if (aiError) throw aiError
+        
+        // 更新对话时间
+        await supabase
+          .from('ai_conversations')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', conversationId)
+        
+        return aiMessage
+      } catch (error) {
+        console.error('AI 助手调用失败:', error)
+        
+        // 如果 AI 调用失败，返回一个默认响应
+        const { data: fallbackMessage, error: fallbackError } = await supabase
+          .from('ai_messages')
+          .insert({
+            conversation_id: conversationId,
+            role: 'assistant',
+            content: '抱歉，AI 助手暂时无法响应，请稍后重试。'
+          })
+          .select()
+          .single()
+        
+        if (fallbackError) throw fallbackError
+        return fallbackMessage
+      }
+    }
     
     // 更新对话时间
     await supabase
@@ -257,7 +304,7 @@ export const aiService = {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId)
     
-    return data
+    return userMessage
   }
 }
 
