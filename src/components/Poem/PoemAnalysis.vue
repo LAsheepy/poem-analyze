@@ -82,7 +82,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useAIStore } from '@/stores/ai'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 
@@ -93,7 +92,6 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const aiStore = useAIStore()
 const userStore = useUserStore()
 
 const activeTab = ref('word')
@@ -130,8 +128,8 @@ const startLearning = async () => {
   
   isLearning.value = true
   try {
-    // 创建学习记录
-    await aiStore.createLearningRecord(props.poem.id, props.analysis.id)
+    // 模拟创建学习记录
+    await new Promise(resolve => setTimeout(resolve, 1000))
     ElMessage.success('学习记录已创建')
   } catch (error) {
     console.error('创建学习记录失败:', error)

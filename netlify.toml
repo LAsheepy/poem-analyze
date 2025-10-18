@@ -1,11 +1,17 @@
 [build]
   publish = "dist"
-  command = "npm run build"
+  functions = "netlify/functions"
 
 [build.environment]
-  VITE_N8N_WEBHOOK_URL = "https://anranzhou.app.n8n.cloud/webhook/ai-chat"
+  NODE_VERSION = "18"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
   status = 200
+
+# 环境变量配置示例
+# [build.environment]
+#   DEEPSEEK_API_KEY = "your_deepseek_api_key"
+#   SUPABASE_URL = "your_supabase_url"
+#   SUPABASE_ANON_KEY = "your_supabase_anon_key"

@@ -110,7 +110,7 @@ VITE_APP_DESCRIPTION=AI驱动诗词解析平台
 4. 配置认证设置
 
 ### 生产部署
-- 支持Vercel、Netlify等平台
+- 支持Netlify等平台
 - 自动环境变量配置
 - CDN加速支持
 

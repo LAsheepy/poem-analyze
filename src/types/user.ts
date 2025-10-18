@@ -1,28 +1,28 @@
 // 用户相关类型定义
 export interface User {
-  bio: string
+  bio?: string
   id: string
   username: string
   email: string
   role: 'student' | 'teacher'
-  avatarUrl: string | null
-  learningProgress: number
-  streakDays: number
-  analyzedPoems: number
-  averageScore: number
-  masteryLevel: string
-  weeklyActivity: number
-  weeklyStudyTime: number
-  completionRate: number
+  avatar_url: string | null
+  learning_progress: number
+  streak_days: number
+  analyzed_poems: number
+  average_score: number
+  mastery_level: string
+  weekly_activity: number
+  weekly_study_time: number
+  completion_rate: number
   interests: string[]
-  createdAt: string
-  updatedAt: string
-  lastLoginAt: string
+  created_at: string
+  updated_at: string
+  last_login_at: string
 }
 
-export interface UserProfile extends Omit<User, 'id' | 'createdAt' | 'updatedAt'> {
-  totalStudyTime: number
-  favoritePoems: string[]
+export interface UserProfile extends Omit<User, 'id' | 'created_at' | 'updated_at'> {
+  total_study_time: number
+  favorite_poems: string[]
   achievements: Achievement[]
 }
 
@@ -37,12 +37,12 @@ export interface Achievement {
 }
 
 export interface LearningStats {
-  totalPoems: number
-  totalTime: number
-  averageScore: number
-  completionRate: number
-  streakDays: number
-  weeklyActivity: number
+  total_poems: number
+  total_time: number
+  average_score: number
+  completion_rate: number
+  streak_days: number
+  weekly_activity: number
 }
 
 export interface UserPreferences {

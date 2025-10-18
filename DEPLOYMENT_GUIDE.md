@@ -69,36 +69,7 @@
 
 ## 生产部署
 
-### 1. Vercel部署 (推荐)
-
-1. **准备部署配置**
-   ```json
-   // vercel.json
-   {
-     "buildCommand": "npm run build",
-     "outputDirectory": "dist",
-     "devCommand": "npm run dev",
-     "framework": "vite"
-   }
-   ```
-
-2. **环境变量配置**
-   - 在Vercel项目设置中添加：
-     - `VITE_SUPABASE_URL`
-     - `VITE_SUPABASE_ANON_KEY`
-     - `VITE_APP_TITLE`
-     - `VITE_APP_DESCRIPTION`
-
-3. **部署命令**
-   ```bash
-   # 安装Vercel CLI
-   npm i -g vercel
-
-   # 部署
-   vercel --prod
-   ```
-
-### 2. Netlify部署
+### 1. Netlify部署
 
 1. **构建设置**
    - Build Command: `npm run build`

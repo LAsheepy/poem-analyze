@@ -122,11 +122,6 @@ CREATE POLICY "用户可以管理自己的学习进度" ON user_progress FOR ALL
 
 ## 生产环境部署
 
-### Vercel部署
-1. 连接GitHub仓库到Vercel
-2. 配置环境变量
-3. 自动部署
-
 ### Netlify部署
 ```bash
 # 构建项目

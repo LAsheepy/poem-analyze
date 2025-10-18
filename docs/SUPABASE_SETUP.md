@@ -131,11 +131,6 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 2. 重新部署应用
 
-### Vercel 部署
-
-1. 在 Vercel 项目设置中添加环境变量
-2. 重新部署应用
-
 ## 9. 安全建议
 
 1. **保护敏感信息**

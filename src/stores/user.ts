@@ -60,7 +60,7 @@ export const useUserStore = defineStore('user', () => {
     
     try {
       await userService.updateLearningProgress(progress)
-      user.value.learningProgress = progress
+      user.value.learning_progress = progress
     } catch (err) {
       error.value = err instanceof Error ? err.message : '更新学习进度失败'
       console.error('更新学习进度失败:', err)

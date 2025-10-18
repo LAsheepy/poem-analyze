@@ -188,7 +188,8 @@ const getLineAnalysis = (index: number) => {
 }
 
 const startAIChat = () => {
-  router.push(`/chat?poem=${poemId.value}`)
+  // AI聊天功能暂未实现
+  console.log('AI聊天功能暂未实现')
 }
 
 const saveAnalysis = async () => {

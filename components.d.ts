@@ -8,7 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AIChat: typeof import('./src/components/AI/AIChat.vue')['default']
+    AIChatAssistant: typeof import('./src/components/AI/AIChatAssistant.vue')['default']
     AuthModal: typeof import('./src/components/Auth/AuthModal.vue')['default']
     AvatarUpload: typeof import('./src/components/User/AvatarUpload.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
@@ -31,7 +31,6 @@ declare module 'vue' {
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElOption: typeof import('element-plus/es')['ElOption']
     ElPagination: typeof import('element-plus/es')['ElPagination']
-    ElProgress: typeof import('element-plus/es')['ElProgress']
     ElRadio: typeof import('element-plus/es')['ElRadio']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElRow: typeof import('element-plus/es')['ElRow']

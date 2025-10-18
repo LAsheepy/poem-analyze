@@ -40,6 +40,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import(/* webpackChunkName: "auth" */ '@/views/Register.vue')
   },
   {
+    path: '/ai-chat',
+    name: 'AIChat',
+    component: () => import(/* webpackChunkName: "ai-chat" */ '@/views/AIChat.vue')
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: () => import(/* webpackChunkName: "settings" */ '@/views/Settings.vue')

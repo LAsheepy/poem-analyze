@@ -1,0 +1,247 @@
+{
+  "name": "DeepSeek诗词AI助手工作流",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "api/deepseek-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook接收消息",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 处理用户输入并验证\nconst inputData = $input.first().json;\nconst userMessage = inputData.message || inputData.text || '';\nconst conversationId = inputData.conversationId || generateConversationId();\nconst userId = inputData.userId || 'anonymous';\n\n// 验证消息内容\nif (!userMessage.trim()) {\n  throw new Error('消息内容不能为空');\n}\n\n// 生成对话ID函数\nfunction generateConversationId() {\n  return 'deepseek_conv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\n}\n\n// 返回处理后的数据\nreturn [{\n  json: {\n    userMessage: userMessage.trim(),\n    conversationId: conversationId,\n    userId: userId,\n    timestamp: new Date().toISOString(),\n    messageType: 'user_query',\n    platform: 'deepseek'\n  }\n}];"
+      },
+      "id": "2",
+      "name": "验证和处理输入",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "requestMethod": "POST",
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.DEEPSEEK_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "deepseek-chat"
+            },
+            {
+              "name": "messages",
+              "value": "=[\n  {\n    \"role\": \"system\",\n    \"content\": \"你是一个专业的诗词分析AI助手，专门帮助用户理解古典诗词。请用中文回答，回答要专业、详细且富有文化内涵。\\n\\n**你的核心能力：**\\n1. **诗词解析** - 分析诗词的意境、情感、艺术特色和修辞手法\\n2. **诗人介绍** - 介绍诗人的生平、创作背景和文学成就\\n3. **文化解读** - 解释诗词中的文化典故和历史背景\\n4. **创作指导** - 提供诗词创作建议和技巧\\n5. **比较分析** - 比较不同诗词的异同和风格特点\\n\\n**回答要求：**\\n- 保持专业性和准确性\\n- 语言优美，富有文学气息\\n- 分层解析：字词→意象→整体意境\\n- 结合历史背景和文化内涵\\n- 适当引用相关诗词进行对比\"\n  },\n  {\n    \"role\": \"user\",\n    \"content\": \"{{ $json.userMessage }}\"\n  }\n]"
+            },
+            {
+              "name": "max_tokens",
+              "value": "2000"
+            },
+            {
+              "name": "temperature",
+              "value": "0.7"
+            },
+            {
+              "name": "top_p",
+              "value": "0.9"
+            },
+            {
+              "name": "stream",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "调用DeepSeek API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 处理DeepSeek响应\nconst responseData = $input.first().json;\nconst aiResponse = responseData.choices[0].message.content;\n\n// 格式化响应，添加诗词分析特有的元数据\nconst formattedResponse = {\n  response: aiResponse,\n  conversationId: $json.conversationId,\n  userId: $json.userId,\n  userMessage: $json.userMessage,\n  timestamp: $json.timestamp,\n  responseType: 'deepseek_poem_analysis',\n  processingTime: Date.now() - new Date($json.timestamp).getTime(),\n  platform: 'deepseek',\n  model: responseData.model,\n  usage: responseData.usage\n};\n\nreturn [{\n  json: formattedResponse\n}];"
+      },
+      "id": "4",
+      "name": "处理DeepSeek响应",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "5",
+      "name": "返回响应",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": "={{ $json.conversationId }}",
+        "properties": {
+          "userId": "={{ $json.userId }}",
+          "userMessage": "={{ $json.userMessage }}",
+          "aiResponse": "={{ $json.response }}",
+          "timestamp": "={{ $json.timestamp }}",
+          "responseType": "={{ $json.responseType }}",
+          "processingTime": "={{ $json.processingTime }}",
+          "platform": "={{ $json.platform }}",
+          "model": "={{ $json.model }}",
+          "usage": "={{ $json.usage }}"
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "记录对话到数据库",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 480],
+      "credentials": {
+        "supabaseApi": "supabaseApi"
+      }
+    },
+    {
+      "parameters": {
+        "event": "deepseek_chat_message",
+        "data": "={{ $json }}",
+        "options": {}
+      },
+      "id": "7",
+      "name": "发送实时通知",
+      "type": "n8n-nodes-base.supabaseRealtime",
+      "typeVersion": 1,
+      "position": [1120, 480],
+      "credentials": {
+        "supabaseApi": "supabaseApi"
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// 错误处理\nconst error = $input.first().error;\nconst originalData = $input.first().json;\n\nconst errorResponse = {\n  error: true,\n  message: error.message || 'DeepSeek API调用失败',\n  conversationId: originalData.conversationId,\n  timestamp: new Date().toISOString(),\n  response: '抱歉，DeepSeek AI处理您的请求时出现了问题。请稍后重试。',\n  platform: 'deepseek'\n};\n\nreturn [{\n  json: errorResponse\n}];"
+      },
+      "id": "8",
+      "name": "错误处理",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [900, 600]
+    }
+  ],
+  "connections": {
+    "Webhook接收消息": {
+      "main": [
+        [
+          {
+            "node": "验证和处理输入",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "验证和处理输入": {
+      "main": [
+        [
+          {
+            "node": "调用DeepSeek API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用DeepSeek API": {
+      "main": [
+        [
+          {
+            "node": "处理DeepSeek响应",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "错误处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理DeepSeek响应": {
+      "main": [
+        [
+          {
+            "node": "返回响应",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "记录对话到数据库",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "记录对话到数据库": {
+      "main": [
+        [
+          {
+            "node": "发送实时通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "错误处理": {
+      "main": [
+        [
+          {
+            "node": "返回响应",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["诗词", "AI助手", "DeepSeek", "聊天", "自动化"],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1",
+  "description": "专门为诗词分析平台设计的DeepSeek AI聊天助手工作流，支持专业的诗词解析和诗人介绍"
+}

@@ -184,7 +184,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAIStore } from '@/stores/ai'
 import type { Poem } from '@/types/poem'
 import {
   ArrowLeft,
@@ -194,13 +193,10 @@ import {
   Picture,
   Star,
   User,
-  Histogram,
-  ChatDotRound,
-  Promotion
+  Histogram
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
-const aiStore = useAIStore()
 
 const poemId = computed(() => route.params.id as string)
 const poem = ref<Poem | null>(null)
@@ -275,18 +271,22 @@ const sendMessage = async () => {
   
   chatMessages.value.push(userMsg)
   
-  try {
-    const response = await aiStore.sendMessage(userMessage.value, poemId.value)
+  // 模拟AI回复
+  setTimeout(() => {
+    const responses = [
+      '这首诗词表达了深切的思乡之情，通过月光意象营造出宁静而忧郁的氛围。',
+      '从文学角度看，这首诗运用了对比手法，将自然景物与内心情感巧妙结合。',
+      '这首诗的意境深远，语言简练，体现了作者高超的艺术造诣。'
+    ]
+    
     const assistantMsg = {
       id: (Date.now() + 1).toString(),
       role: 'assistant' as const,
-      content: response.content,
+      content: responses[Math.floor(Math.random() * responses.length)],
       timestamp: new Date()
     }
     chatMessages.value.push(assistantMsg)
-  } catch (error) {
-    console.error('发送消息失败:', error)
-  }
+  }, 1000)
   
   userMessage.value = ''
 }
@@ -304,15 +304,14 @@ onMounted(() => {
       '举头望明月，',
       '低头思故乡。'
     ],
-    annotations: [],
+    translation: null,
     difficulty: 'easy',
     tags: ['思乡', '月亮'],
-    createdAt: new Date(),
-    updatedAt: new Date()
+    views: 0,
+    likes: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   }
-  
-  // 初始化AI对话
-  aiStore.createConversation(poemId.value)
 })
 </script>
 

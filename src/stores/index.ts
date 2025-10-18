@@ -1,16 +1,13 @@
 import { computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useUserStore } from './user'
-import { useAIStore } from './ai'
 
 // 状态管理统一导出
 export { useUserStore } from './user'
-export { useAIStore } from './ai'
 
 // 组合式store
 export function useAppStore() {
   const userStore = useUserStore()
-  const aiStore = useAIStore()
   
   // 组合式状态
   const isAppReady = computed(() => {
@@ -27,8 +24,6 @@ export function useAppStore() {
       const user = await userStore.loadUser()
       
       if (user) {
-        // 用户已登录，加载对话列表
-        await aiStore.loadConversations()
         console.log('应用初始化成功，用户已登录')
       } else {
         console.log('应用初始化成功，用户未登录')
@@ -43,8 +38,6 @@ export function useAppStore() {
   
   const resetApp = () => {
     userStore.clearUser()
-    aiStore.conversations = []
-    aiStore.currentConversationId = undefined
   }
   
   // 登录方法
@@ -98,7 +91,6 @@ export function useAppStore() {
   
   return {
     userStore,
-    aiStore,
     isAppReady,
     initializeApp,
     resetApp,

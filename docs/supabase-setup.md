@@ -120,7 +120,7 @@ npm run dev
 
 1. 配置生产环境变量
 2. 构建应用：`npm run build`
-3. 部署到 Vercel/Netlify 等平台
+3. 部署到 Netlify 等平台
 
 ## 故障排除
 

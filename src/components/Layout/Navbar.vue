@@ -11,6 +11,18 @@
         </router-link>
       </div>
 
+      <!-- 桌面端导航菜单 -->
+      <div class="desktop-nav-menu">
+        <router-link to="/poems" class="nav-link">
+          <el-icon><Notebook /></el-icon>
+          诗词库
+        </router-link>
+        <router-link to="/ai-chat" class="nav-link">
+          <el-icon><ChatDotRound /></el-icon>
+          AI助手
+        </router-link>
+      </div>
+
       <!-- 桌面端用户菜单 -->
       <div class="desktop-user-menu" v-if="user">
         <el-dropdown @command="handleUserCommand">
@@ -58,7 +70,7 @@
                 <el-icon><Notebook /></el-icon>
                 诗词库
               </el-dropdown-item>
-              <el-dropdown-item command="chat">
+              <el-dropdown-item command="ai-chat">
                 <el-icon><ChatDotRound /></el-icon>
                 AI助手
               </el-dropdown-item>
@@ -172,8 +184,8 @@ const handleMobileCommand = (command: string) => {
     case 'poems':
       router.push('/poems')
       break
-    case 'chat':
-      router.push('/chat')
+    case 'ai-chat':
+      router.push('/ai-chat')
       break
     case 'profile':
       router.push('/profile')
@@ -234,6 +246,37 @@ const handleLogout = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 20px;
+}
+
+.desktop-nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: #606266;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #409eff;
+  background: #f5f7fa;
+}
+
+.nav-link.router-link-active {
+  color: #409eff;
+  background: #ecf5ff;
 }
 
 .navbar-brand {
