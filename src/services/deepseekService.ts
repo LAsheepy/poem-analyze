@@ -34,7 +34,7 @@ interface ChatMessage {
 }
 
 class DeepSeekService {
-  private baseURL = '/.netlify/functions'
+  private baseURL = '/api'
 
   async sendMessage(
     messages: DeepSeekMessage[], 
