@@ -122,7 +122,7 @@ export const n8nService = new N8NService()
 
 // 默认配置（可在.env中配置）
 const defaultConfig: Partial<N8NChatConfig> = {
-  webhookUrl: import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://anranzhou.app.n8n.cloud/webhook/analyze-poem',
+  webhookUrl: import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://anranzhou.app.n8n.cloud/webhook/ai-chat',
   apiKey: import.meta.env.VITE_N8N_API_KEY || '',
   useN8N: import.meta.env.VITE_USE_N8N === 'true'
 }
