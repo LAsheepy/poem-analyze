@@ -34,7 +34,7 @@ interface ChatMessage {
 }
 
 class DeepSeekService {
-  private baseURL = '/api'
+  private baseURL = 'http://localhost:3005/api'
 
   async sendMessage(
     messages: DeepSeekMessage[], 

@@ -6,12 +6,32 @@
         <div class="chat-header">
           <div class="assistant-info">
             <el-avatar :size="32" :src="assistantAvatar" />
-            <span class="assistant-name">诗词AI助手</span>
+            <div class="assistant-details">
+              <span class="assistant-name">诗词AI助手</span>
+              <div class="service-status">
+                <span class="service-label">服务模式:</span>
+                <el-switch
+                  v-model="useN8N"
+                  active-text="n8n工作流"
+                  inactive-text="DeepSeek API"
+                  @change="toggleServiceMode"
+                />
+                <span class="status-indicator" :class="serviceStatusClass">
+                  {{ serviceStatusText }}
+                </span>
+              </div>
+            </div>
           </div>
-          <el-button type="text" @click="clearChat">
-            <el-icon><Refresh /></el-icon>
-            清空对话
-          </el-button>
+          <div class="header-actions">
+            <el-button type="text" @click="showN8NConfig = true" v-if="useN8N">
+              <el-icon><Setting /></el-icon>
+              配置n8n
+            </el-button>
+            <el-button type="text" @click="clearChat">
+              <el-icon><Refresh /></el-icon>
+              清空对话
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -93,14 +113,18 @@
         </div>
       </div>
     </el-card>
+    
+    <!-- n8n配置对话框 -->
+    <N8NConfig v-model="showN8NConfig" @configChanged="handleConfigChanged" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, nextTick, onMounted, computed } from 'vue'
+import { ElMessage, ElSwitch } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { deepSeekService } from '@/services/deepseekService'
+import { chatService } from '@/services/chatService'
+import N8NConfig from './N8NConfig.vue'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -114,10 +138,25 @@ const messages = ref<ChatMessage[]>([])
 const inputMessage = ref('')
 const isLoading = ref(false)
 const messagesContainer = ref<HTMLElement>()
+const useN8N = ref(false)
+const showN8NConfig = ref(false)
 
 // 头像和配置
 const userAvatar = '/default-avatar.png'
 const assistantAvatar = '/ai-assistant.png'
+
+// 计算服务状态
+const serviceStatus = computed(() => chatService.getServiceStatus())
+const serviceStatusClass = computed(() => ({
+  'status-online': serviceStatus.value.n8nConfigured,
+  'status-offline': !serviceStatus.value.n8nConfigured && useN8N.value
+}))
+const serviceStatusText = computed(() => {
+  if (useN8N.value) {
+    return serviceStatus.value.n8nConfigured ? 'n8n已连接' : 'n8n未配置'
+  }
+  return 'DeepSeek已连接'
+})
 
 // 快捷操作
 const quickActions = [
@@ -127,8 +166,8 @@ const quickActions = [
   { text: '宋词格式', prompt: '宋词的基本格式和韵律要求是什么？' }
 ]
 
-// 调用DeepSeek API获取回复
-const getDeepSeekResponse = async (userMessage: string): Promise<string> => {
+// 调用聊天服务获取回复
+const getChatResponse = async (userMessage: string): Promise<string> => {
   try {
     // 检查是否为诗词解析请求
     const lowerMessage = userMessage.toLowerCase()
@@ -145,12 +184,12 @@ const getDeepSeekResponse = async (userMessage: string): Promise<string> => {
         const poet = poetMatch ? poetMatch[1] : undefined
         
         if (poet) {
-          return await deepSeekService.analyzePoem(poemContent, poet)
+          return await chatService.analyzePoem(poemContent, poet)
         } else {
-          return await deepSeekService.analyzePoem(poemContent)
+          return await chatService.analyzePoem(poemContent)
         }
       } else if (poetMatch) {
-        return await deepSeekService.introducePoet(poetMatch[1])
+        return await chatService.introducePoet(poetMatch[1])
       }
     }
     
@@ -182,10 +221,10 @@ const getDeepSeekResponse = async (userMessage: string): Promise<string> => {
       }
     ]
     
-    const response = await deepSeekService.sendMessage(messages, 'general_chat')
-    return response.choices[0].message.content
+    const response = await chatService.sendMessage(messages, 'general_chat')
+    return response.content
   } catch (error) {
-    console.error('DeepSeek API调用失败:', error)
+    console.error('聊天服务调用失败:', error)
     throw new Error('AI服务暂时不可用，请稍后重试')
   }
 }
@@ -217,8 +256,8 @@ const sendMessage = async () => {
   scrollToBottom()
   
   try {
-    // 获取DeepSeek AI回复
-    const aiResponse = await getDeepSeekResponse(userMessage)
+    // 获取AI回复
+    const aiResponse = await getChatResponse(userMessage)
     
     // 更新AI消息
     const lastIndex = messages.value.length - 1
@@ -229,7 +268,7 @@ const sendMessage = async () => {
       timestamp: Date.now()
     }
   } catch (error) {
-    console.error('DeepSeek回复失败:', error)
+    console.error('AI回复失败:', error)
     ElMessage.error(error instanceof Error ? error.message : '回复生成失败，请重试')
     
     // 移除加载消息
@@ -263,6 +302,35 @@ const saveAnalysis = (content: string) => {
     return
   }
   ElMessage.success('分析已保存到个人收藏')
+}
+
+// 切换服务模式
+const toggleServiceMode = async (useN8NMode: boolean) => {
+  try {
+    chatService.toggleServiceMode(useN8NMode)
+    
+    // 测试连接
+    const connectionResults = await chatService.testConnection()
+    
+    if (useN8NMode && !connectionResults.n8n) {
+      ElMessage.warning('n8n工作流连接失败，请检查配置')
+      useN8N.value = false
+      chatService.toggleServiceMode(false)
+    } else {
+      ElMessage.success(`已切换到${useN8NMode ? 'n8n工作流' : 'DeepSeek API'}模式`)
+    }
+  } catch (error) {
+    console.error('服务切换失败:', error)
+    ElMessage.error('服务切换失败，请检查配置')
+    useN8N.value = false
+    chatService.toggleServiceMode(false)
+  }
+}
+
+// 处理配置变更
+const handleConfigChanged = () => {
+  // 更新服务状态显示
+  useN8N.value = chatService.getConfig().useN8N
 }
 
 // 清空对话
@@ -317,15 +385,58 @@ onMounted(() => {
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .assistant-info {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.assistant-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .assistant-name {
   font-weight: 600;
   color: #303133;
+  font-size: 16px;
+}
+
+.service-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.service-label {
+  color: #606266;
+}
+
+.status-indicator {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.status-online {
+  background-color: #f0f9ff;
+  color: #1890ff;
+  border: 1px solid #91d5ff;
+}
+
+.status-offline {
+  background-color: #fff2f0;
+  color: #ff4d4f;
+  border: 1px solid #ffccc7;
 }
 
 .messages-container {

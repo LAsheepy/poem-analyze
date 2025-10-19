@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/theme-chalk/index.css'
+import './styles/index.css'
 import './styles/main.scss'
 
 import App from './App.vue'

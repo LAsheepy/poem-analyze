@@ -1,0 +1,147 @@
+{
+  "name": "诗词分析工作流",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/poem-analysis",
+        "responseMode": "onReceived"
+      },
+      "id": "1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const { poemContent, analysisType } = $input.first().json.body;\n\n// 构建DeepSeek API请求\nconst deepseekRequest = {\n  model: \"deepseek-chat\",\n  messages: [\n    {\n      role: \"system\",\n      content: \"你是一个专业的诗词分析专家，擅长分析古典诗词的意境、修辞手法、作者背景等。请用中文回答。\"\n    },\n    {\n      role: \"user\",\n      content: `请分析以下诗词：\\n\\n${poemContent}\\n\\n分析类型：${analysisType || '综合分析'}`\n    }\n  ],\n  temperature: 0.7,\n  max_tokens: 2000\n};\n\nreturn deepseekRequest;"
+      },
+      "id": "2",
+      "name": "构建DeepSeek请求",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "requestMethod": "POST",
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.DEEPSEEK_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "jsonParameters": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{ $json.model }}"
+            },
+            {
+              "name": "messages",
+              "value": "={{ $json.messages }}"
+            },
+            {
+              "name": "temperature",
+              "value": "={{ $json.temperature }}"
+            },
+            {
+              "name": "max_tokens",
+              "value": "={{ $json.max_tokens }}"
+            }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "调用DeepSeek API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\n\nif (response.choices && response.choices.length > 0) {\n  const analysisResult = response.choices[0].message.content;\n  \n  return {\n    success: true,\n    analysis: analysisResult,\n    usage: response.usage,\n    timestamp: new Date().toISOString()\n  };\n} else {\n  return {\n    success: false,\n    error: \"DeepSeek API返回异常\",\n    timestamp: new Date().toISOString()\n  };\n}"
+      },
+      "id": "4",
+      "name": "处理API响应",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "5",
+      "name": "返回结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "构建DeepSeek请求",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建DeepSeek请求": {
+      "main": [
+        [
+          {
+            "node": "调用DeepSeek API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用DeepSeek API": {
+      "main": [
+        [
+          {
+            "node": "处理API响应",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理API响应": {
+      "main": [
+        [
+          {
+            "node": "返回结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-19T05:00:00.000Z",
+  "versionId": "1"
+}
