@@ -34,8 +34,9 @@ git push origin main
 ### 第二步：Vercel 部署
 1. 登录 [Vercel](https://vercel.com)
 2. 导入 GitHub 仓库
-3. 配置环境变量：
-   - `DEEPSEEK_API_KEY`: 您的 DeepSeek API 密钥
+3. 在项目设置中配置环境变量：
+   - **环境变量名称**: `DEEPSEEK_API_KEY`
+   - **值**: 您的 DeepSeek API 密钥（以 `sk-` 开头）
 4. 部署项目
 
 ### 第三步：验证功能
