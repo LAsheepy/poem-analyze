@@ -40,7 +40,7 @@ exports.handler = async (event) => {
     }
 
     // 获取DeepSeek API密钥
-    const apiKey = process.env.DEEPSEEK_API_KEY
+    const apiKey = process.env.DEEPSEEK_API_KEY || process.env.VITE_DEEPSEEK_API_KEY
     if (!apiKey) {
       return {
         statusCode: 500,
