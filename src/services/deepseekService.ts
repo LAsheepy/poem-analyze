@@ -34,7 +34,7 @@ interface ChatMessage {
 }
 
 class DeepSeekService {
-  private baseURL = 'http://localhost:3005/api'
+  private baseURL = import.meta.env.VITE_API_BASE_URL || '/api'
 
   async sendMessage(
     messages: DeepSeekMessage[], 

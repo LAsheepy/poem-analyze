@@ -148,9 +148,9 @@ class ChatService {
 // 创建聊天服务实例
 export const chatService = new ChatService()
 
-// 默认配置 - 自动检测可用服务
+// 默认配置
 const defaultConfig: Partial<ChatServiceConfig> = {
-  useN8N: false, // 默认禁用n8n，直到确认工作流可用
+  useN8N: import.meta.env.VITE_USE_N8N === 'true',
   conversationId: 'default_chat'
 }
 

@@ -90,7 +90,8 @@ class N8NService {
       const response = await fetch(this.config.webhookUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(this.config.apiKey && { 'Authorization': `Bearer ${this.config.apiKey}` })
         },
         body: JSON.stringify({
           message: '测试连接',
@@ -99,7 +100,15 @@ class N8NService {
         })
       })
 
-      return response.ok
+      // 检查响应状态和内容
+      if (!response.ok) {
+        console.error('n8n连接测试失败:', response.status, response.statusText)
+        return false
+      }
+
+      // 尝试解析响应内容
+      const data = await response.json()
+      return true
     } catch (error) {
       console.error('n8n连接测试失败:', error)
       return false
@@ -122,7 +131,7 @@ export const n8nService = new N8NService()
 
 // 默认配置（可在.env中配置）
 const defaultConfig: Partial<N8NChatConfig> = {
-  webhookUrl: import.meta.env.VITE_N8N_WEBHOOK_URL || 'https://anranzhou.app.n8n.cloud/webhook/ai-chat',
+  webhookUrl: import.meta.env.VITE_N8N_WEBHOOK_URL || '',
   apiKey: import.meta.env.VITE_N8N_API_KEY || '',
   useN8N: import.meta.env.VITE_USE_N8N === 'true'
 }
