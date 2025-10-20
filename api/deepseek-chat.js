@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     }
 
     // 获取DeepSeek API密钥
-    const apiKey = process.env.DEEPSEEK_API_KEY
+    const apiKey = process.env.DEEPSEEK_API_KEY || process.env.VITE_DEEPSEEK_API_KEY
     if (!apiKey) {
       return res.status(500).json({ error: 'DeepSeek API密钥未配置' })
     }
